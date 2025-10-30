@@ -1,0 +1,2 @@
+# Fenchel_Duality_of_Nonlinear_Eigenproblems_Computation_of_Eigenfunctions
+Implementation and examples of the numerical examples in the paper Fenchel Duality of Nonlinear Eigenfunctions
