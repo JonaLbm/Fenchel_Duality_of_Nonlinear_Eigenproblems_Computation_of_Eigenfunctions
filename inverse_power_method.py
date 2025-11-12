@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from tqdm import tqdm
 import pandas
@@ -56,20 +57,20 @@ def scheme(u0, Z, tol, p, max_it, Nt, Dnp, cord, h, r):
     return u0, uk_list, plpls, cosims, error_list
 
 
-max_it = 20  # number of iteration for the inverse pwoer method
+max_it = 30  # number of iteration for the inverse power method
 Nt = 500  # number of maximal iterations in Newton's method
 tol = 10**(-12)  # tolerance of Newton's method
 
-p=3  # p value of p-Laplacian
+p=1.77  # 1.77, 2, 5  # p value of p-Laplacian
 q=p/(p-1)  # Hölder conjugate value
 
 # Numerical Parameters
 Dnp = calc_dnp(p)  # Constant of the discretization
-R = 1  # Radius of the ball
-h = 0.02  # Parameter of the spatial discretization (distance between grid points)
-r = 0.02**(0.5)  # radius of the mean value approximation
+R = 1  # Side length of the square domain
+h = 0.025  # Parameter of the spatial discretization (distance between grid points)
+r = 0.2  # radius of the mean value approximation
 
-# Calculate coordinates
+# Calculate coordinates neihbouring within the mean value radius
 I_max = int(np.ceil(r/h))
 Q = (r/h)**2
 cord = []
@@ -104,14 +105,15 @@ U = U0.copy()
 U = U / np.linalg.norm(U.flatten(), ord=p)
 
 # calculate the solution with the inverse power method
-uk, uk_list, plpls, cosims, e0 = scheme(U, Z, tol, p, max_it, Nt, X, Dnp, cord, h, r)
+uk, uk_list, plpls, cosims, e0 = scheme(U, Z, tol, p, max_it, Nt, Dnp, cord, h, r)
 
-# safe the study as dataframe
+# save the study as dataframe
 results_frame = pandas.DataFrame()
-temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'x': X,
+temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'xy': (X, Y),
                              'plpl': plpls, 'COSIM': cosims, 'error': e0}])
 results_frame = pandas.concat([results_frame, temp_df], ignore_index=True)
 
 # save results as pickle file
-results_frame.to_pickle('results_2d_ipm_ex3.pk')
+os.makedirs('study_results/', exist_ok=True)
+results_frame.to_pickle('study_results/ipm_ex1_p_1,77.pk')
 

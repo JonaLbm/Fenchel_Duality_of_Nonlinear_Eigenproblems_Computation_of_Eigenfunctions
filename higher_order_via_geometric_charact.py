@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from tqdm import tqdm
 import pandas
@@ -74,7 +75,9 @@ U0 = U0 * (Z == 1)
 U = U0.copy()
 U = U / np.linalg.norm(U.flatten(), ord=p)
 
+# calculate the iterative scheme
 uk, uk_list, plpls, cosims, lambda_vals, e0 = scheme(U, p, max_it)
+
 # safe the study as dataframe
 results_frame = pandas.DataFrame()
 temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'x': X,
@@ -82,5 +85,6 @@ temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'x':
 results_frame = pandas.concat([results_frame, temp_df], ignore_index=True)
 
 # save results as pickle file
-results_frame.to_pickle('results_2d_armijo_cosim_flow_ex4.pk')
+os.makedirs('study_results/', exist_ok=True)
+results_frame.to_pickle('study_results/cosim_flow_ex2.pk')
 

@@ -29,12 +29,12 @@ def solve_p_laplace_w_newton(U, F, Z, tol, p, max_iter, Dnp, cord, h, r):
     '''
     # Convert to 1D for easier matrix operations
     N, M = Z.shape
-    U = U/np.linalg.norm(U.ravel(), ord=p)
+    #U = U/np.linalg.norm(U.ravel(), ord=p)
     PL = -disc_p_lap(p, r, h, Z, U, Dnp, cord)  # with - sign: positive laplacian
     PL1D = PL.ravel()
     F1D = F.ravel()
     # calculate and track error
-    best_error = np.linalg.norm(F1D/np.linalg.norm(F1D) + PL1D/np.linalg.norm(PL1D))  # error of the normalized values
+    best_error = np.linalg.norm(F1D + PL1D)  # error of the p-Dirichlet problem
     best_U = np.copy(U)
     # Perform Newton Update scheme until convergence or maximum iterations
     for iteration in range(max_iter):  # tqdm(range(max_iter)):  #
@@ -48,27 +48,25 @@ def solve_p_laplace_w_newton(U, F, Z, tol, p, max_iter, Dnp, cord, h, r):
             dU = spsolve(J_matrix, rhs)
         except:
             dU = lsqr(J_matrix, rhs)[0]
-            print('lsqr newton step')
+            #print('lsqr newton step')
         # Update the solution
         U_new = U1D - dU  # make newton step
         U = U_new.reshape((N, M))
-        U = U * (Z == 1)
-        U = U/np.linalg.norm(U.ravel(), ord=p)  # normalizing the iterates for stability and faster convergence
+        #U = U * (Z == 1)
+        #U = U/np.linalg.norm(U.ravel(), ord=p)  # normalizing the iterates for stability and faster convergence
         # due to the homogenetiy of the p-Laplace
         # we do not need the correct 'length', because we will normalize afterwards in the IPM anyway
-        # we therefore look at the 'normalozed error' for stopping criterion
+        # we therefore look at the 'normalized error' for stopping criterion
 
         # Compute the current error as stopping criteria
         PL = -disc_p_lap(p, r, h, Z, U, Dnp, cord)   # with - sign: positive laplacian
         PL1D = PL.ravel()
-        error = np.linalg.norm(F1D/np.linalg.norm(F1D) + PL1D/np.linalg.norm(PL1D))
+        error = np.linalg.norm(F1D + PL1D)
         if error < best_error:
             best_U = np.copy(U)
             best_error = error
         if error < tol:
             break
-
-    print('newton error', best_error)
     return best_U, best_error
 
 
@@ -108,9 +106,9 @@ def dphi(r, p):
     -------
 
     '''
-    epsilon = 1e-2
+    epsilon = 1e-12
     if p<2:
-        value = (p - 1) * (np.abs(r) + epsilon) ** (p - 2) - np.sign(r) * (p-1) * epsilon**(p-2)
+        value = (p - 1) * (np.abs(r) + epsilon) ** (p - 2) #- np.sign(r) * (p-1) * epsilon**(p-2)
     elif p==2:
         value =  np.ones_like(r)
     else:
@@ -120,7 +118,7 @@ def dphi(r, p):
 
 def disc_p_lap(p, r, h, Z, U, Dnp, cord):
     '''
-    calculates the negative discrete p-Laplacian by approximating the p-Laplacian with the del teso and Lindgren
+    calculates the negative discrete p-Laplacian by approximating the p-Laplacian with the del Teso and Lindgren
     mean value approximation
 
     Parameters
@@ -137,7 +135,6 @@ def disc_p_lap(p, r, h, Z, U, Dnp, cord):
     -------
     negative p-Laplacian of U
     '''
-    # calculates - p-laplacian
     PL = np.zeros_like(Z, dtype=float)
     for i in range(Z.shape[1]):
         for j in range(Z.shape[0]):
@@ -149,7 +146,7 @@ def disc_p_lap(p, r, h, Z, U, Dnp, cord):
                     U_current = U[j, i]
                     PL[j, i] += phi(U_neighbor - U_current, p)
     PL *= h**2 / (np.pi * r**2 * Dnp * r**p)
-    #PL = PL #* (Z==1)
+    # PL = PL #* (Z==1)
     return -PL
 
 
@@ -344,7 +341,7 @@ def dNplpl(u, p, r, h, Z, Dnp, cord):
     '''
     q = p/(p-1)
     plpl = disc_p_lap(p, r, h, Z, u, Dnp, cord)
-    g_plpl = -jac_disc_p_lap(p, r, h, Z, u, Dnp, cord)
+    g_plpl = -jac_disc_p_lap(p, r, h, Z, u, Dnp, cord).toarray()
     dNplpl =  np.linalg.norm(plpl.ravel(), ord=q)**(1-q) * np.matmul(g_plpl, phi(plpl.ravel(), q))
     return dNplpl.reshape(np.shape(u)) #* (Z==1)
 
@@ -374,7 +371,7 @@ def obj_function(u_it, p, r, h, Z, Dnp, cord):
     return 1-np.inner(plpl_it.ravel(), u_it.ravel())/(nu_it*nplpl_it)  # return 1- cosim
 
 
-def next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explizit=False):
+def next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explicit=False):
     '''
     For a given tau it computes an initial guess and then calls the solver to solve for the next iterate of the flow
 
@@ -403,17 +400,17 @@ def next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h,
     q = p/(p-1)
     rhs *= tau  # ** (p - 1)
     weight *= tau  # ** (p - 1)
-    initial_guess = phi(rhs + weight * plpl, q) + uk  # explizit euler as initial guess
-    if explizit is True:
+    initial_guess = phi(rhs + weight * plpl, q) + uk  # explicit euler as initial guess
+    if explicit is True:
         return initial_guess
     u_n, newton_error = solve_flow_step_w_newton(initial_guess, rhs, Z, tol, p, Nt, uk, weight, Dnp, cord, h, r)
 
     if np.isnan(newton_error):
-        # print('retrying with different inital guess')
+        # print('retrying with different initial guess')
         initial_guess = phi(rhs, q)
         u_n, newton_error = solve_flow_step_w_newton(initial_guess, rhs, Z, tol, p, Nt, uk, weight, Dnp, cord, h, r)
         if np.isnan(newton_error):
-            # print('retrying with different inital guess')
+            # print('retrying with different initial guess')
             initial_guess = uk
             u_n, newton_error = solve_flow_step_w_newton(initial_guess, rhs, Z, tol, p, Nt, uk, weight, Dnp, cord, h, r)
             if np.isnan(newton_error):
@@ -422,7 +419,7 @@ def next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h,
     return u_n
 
 
-def currrent_difference(uk, obj_uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explizit=False):
+def currrent_difference(uk, obj_uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explicit=False):
     '''
     Calculates the difference between the objective function value of the last iterate and a candidate for the next
 
@@ -448,14 +445,14 @@ def currrent_difference(uk, obj_uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, 
     -------
 
     '''
-    current_u =  next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explizit=False)
+    current_u =  next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explicit=explicit)
     if current_u is None:
         return None, None
     current_diff = obj_function(current_u, p, r, h, Z, Dnp, cord) - obj_uk
     return current_diff, current_u
 
 
-def line_search(uk, rhs, tau0, weight, plpl, p, r, h, Z, Dnp, cord, tol, Nt, explizit=False):
+def line_search(uk, rhs, tau0, weight, plpl, p, r, h, Z, Dnp, cord, tol, Nt, explicit=False):
     '''
     Performs a line search to find the optimal step size.
      - decreasing the step size if we are not improving our target function
@@ -497,7 +494,7 @@ def line_search(uk, rhs, tau0, weight, plpl, p, r, h, Z, Dnp, cord, tol, Nt, exp
         if linesearch_iteration == 40:
             decrease = 0.5
             increase = 1.5
-        dk2a, curr_u = currrent_difference(tau0, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explizit=explizit)  # current descend
+        dk2a, curr_u = currrent_difference(uk, obj_uk, p, tau0, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h, r, explicit=explicit)  # current descend
         print('curr_optimization', dk2a, 'best_optimization', best_dk2, 'curr_tau', tau0, 'best', best_tau)
         if curr_u is None:
             if best_dk2 < 0:
@@ -556,16 +553,16 @@ def flow_step_2d(uk, p, tau, r, h, Z, Dnp, cord, tol, Nt):
     cosim = np.inner(plpl.ravel(), uk.ravel())/(nu*nplpl)  # track the current cosim value
     error = np.linalg.norm(phi(uk, p).ravel()/(nu**(p-1)) - plpl.ravel()/nplpl)  # track the current l2 error
     coeff = p/(nu*nplpl)
-    rhs = -cosim * (dNp(uk,p) * nplpl + nu * dNplpl(uk,p))/(nu*nplpl)
+    rhs = -cosim * (dNp(uk,p) * nplpl + nu * dNplpl(uk,p, r, h, Z, Dnp, cord))/(nu*nplpl)
     #rhs = rhs/np.linalg.norm(rhs.ravel(), ord=q)
     #tau = 1 - cosim
     if tau !=0:
         print('--start step sizing with tau0 as old best tau')
-        new_uk, tau = line_search(uk, rhs, tau, coeff, plpl)
+        new_uk, tau = line_search(uk, rhs, tau, coeff, plpl, p, r, h, Z, Dnp, cord, tol, Nt, explicit=False)
     if tau ==0:
         print('try explicit step')
         print('cosim', cosim)
-        new_uk, tau = line_search(uk, rhs, tau, coeff, plpl, p, r, h, Z, Dnp, cord, tol, Nt, explizit=False)
+        new_uk, tau = line_search(uk, rhs, tau, coeff, plpl, p, r, h, Z, Dnp, cord, tol, Nt, explicit=True)
     return new_uk, plpl, cosim, cosim * nplpl/(nu**(p-1)), error, tau
 
 

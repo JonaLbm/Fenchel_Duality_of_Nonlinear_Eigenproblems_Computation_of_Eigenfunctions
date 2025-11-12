@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas
 from scipy import optimize as opt
@@ -61,7 +62,7 @@ def scheme(U, Z, tol, p, Nt, max_it):
         U_list.append(U)
     return U_list, V_list, alpha_list
 
-max_it = 30  # number of iteration for the inverse power method
+max_it = 50  # number of iteration for the inverse power method
 Nt = 500  # number of maximal iterations in Newton's method
 tol = 10**(-12)  # tolerance of Newton's method
 
@@ -72,7 +73,7 @@ q=p/(p-1)  # Hölder conjugate value
 Dnp = calc_dnp(p)  # Constant of the discretization
 R = 1  # Radius of the ball
 h = 0.02  # Parameter of the spatial discretization (distance between grid points)
-r = 0.02**0.5  # radius of the mean value approximation
+r = 0.02**(5/8)  # radius of the mean value approximation
 
 # Calculate coordinates 
 I_max = int(np.ceil(r/h))
@@ -124,6 +125,6 @@ data_dict = {'U': U_list, 'V': V_list, 'dual_mapping': J_u_list, 'p_laplace': pl
             'max_error': max_error_list, 'l2':l2_error_list, 'cosim': cosim_list, 'dual_Rayleigh_Quotient': dRQ_list, 'etc': important_quantities}
 data_frame = pandas.DataFrame.from_dict(data_dict, orient='index')
 data_frame = data_frame.transpose()
-#data_frame.to_pickle('inv_pm_p_3_higher_ex3_delteso_100_it_50.pk')
-data_frame.to_pickle('results_2d_hipm_ex3.pk')
+os.makedirs('study_results/', exist_ok=True)
+data_frame.to_pickle('study_results/ipm_higher_ex2_MV.pk')
 

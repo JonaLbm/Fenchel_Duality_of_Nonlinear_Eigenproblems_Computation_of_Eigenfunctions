@@ -1,3 +1,4 @@
+import os
 from fenics import *
 from dolfin import fem, io, mesh, plot
 import sys
@@ -5,8 +6,6 @@ from scipy import optimize as opt
 import numpy as np
 import pandas
 import logging
-#import subprocess
-#subprocess.run("export PKG_CONFIG_PATH=/Users/ih09odap/miniconda3/envs/fenics-env-clean/lib/pkgconfig:$PKG_CONFIG_PATH", shell = True)
 logging.getLogger('FFC').setLevel(logging.WARNING)
 import matplotlib
 import matplotlib.pyplot as plt
@@ -16,8 +15,9 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.size"] = 10
 
 M = sys.float_info.max
-# mesh generation - changed the 'stamp' now closer to del teso lindgren
-mesh = RectangleMesh(Point(-1.0, -1.0), Point(1.0, 1.0), 100, 100, 'crossed')  # more connections with crossed
+# mesh generation - changed the 'stamp'
+mesh_type = 'right'  # 'left', 'right' or 'crossed'
+mesh = RectangleMesh(Point(-1.0, -1.0), Point(1.0, 1.0), 100, 100, mesh_type)  # more connections with crossed
 # number of iterations
 it = 200
 
@@ -246,4 +246,6 @@ for p in [3]:#[1.7, 2, 3]:
 data_dict = {'U': U_s, 'zeta': zeta_s, 'cosim': cs, 'RQ': Rs, 'dual_Rayleigh_Quotient': R_stars}
 data_frame = pandas.DataFrame.from_dict(data_dict, orient='index')
 data_frame = data_frame.transpose()
-data_frame.to_pickle('inv_pm_p_3_higher_ex3_fenics_100_it_200_crossed.pk')
+os.makedirs('study_results/', exist_ok=True)
+data_frame.to_pickle('study_results/ipm_higher_ex2_FE_' + mesh_type + '.pk')
+
