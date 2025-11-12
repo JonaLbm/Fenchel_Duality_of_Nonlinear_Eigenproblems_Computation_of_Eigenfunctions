@@ -119,7 +119,7 @@ ax4.plot(n_index, RQ_list_3 ** (-1 / p3) - dRQ_list_3 ** (1 / q3), c=colors[2])
 plt.legend([r'p=1.77', r'p=2', r'p=5'])
 ax4.set_title('duality gap')
 plt.tight_layout(w_pad=3.5, h_pad=0.5, rect=[0, 0, 0.9, 1])
-plt.savefig('inv_pm_conv.pdf', dpi=300)
+plt.savefig('plots/inv_pm_conv.pdf', dpi=300)
 plt.show()
 
 # Plotting solutions and errors
@@ -169,6 +169,6 @@ ax4.set_ylabel(r'$x_2$')
 ax4.set_zlabel(r'$u(x)$')
 
 plt.tight_layout(w_pad=3.5, h_pad=0.5, rect=[0, 0, 0.93, 1])
-plt.savefig('ground_states.pdf', dpi=300, transparent=False)
+plt.savefig('plots/ground_states.pdf', dpi=300, transparent=False)
 plt.show()
 
