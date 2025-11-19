@@ -5,7 +5,7 @@ import pandas
 from helpers import phi, disc_p_lap, flow_step_2d, calc_dnp
 np.seterr(all="ignore")
 
-def scheme(u0, p, max_it):
+def scheme(u0, p, max_it, r, h, Z, Dnp, cord, tol, Nt):
     uk_list = [u0]
     plpl = disc_p_lap(p, r, h, Z, u0, Dnp, cord)
     plpls = [plpl]
@@ -58,33 +58,33 @@ yy = np.arange(-R-r, R+r, h)
 X, Y = np.meshgrid(xx, yy)
 
 # Define the L-shaped domain.
-#Z = np.zeros_like(X, dtype=bool)
-#Z[(Y <= 0) & (X <= 1.0)] = True  # Bottom part of L
-#Z[(Y <= 1.0) & (X <= 0)] = True  # Left part of L
-#Z[(Y < -1)] = False
-#Z[(X < -1)] = False
+Z = np.zeros_like(X, dtype=bool)
+Z[(Y <= 0) & (X <= 1.0)] = True  # Bottom part of L
+Z[(Y <= 1.0) & (X <= 0)] = True  # Left part of L
+Z[(Y < -1)] = False
+Z[(X < -1)] = False
 
 # # square
-Z = np.zeros_like(X, dtype=bool)
-Z[(np.abs(Y) <= 1.0) & (np.abs(X) <= 1.0)] = True
+#Z = np.zeros_like(X, dtype=bool)
+#Z[(np.abs(Y) <= 1.0) & (np.abs(X) <= 1.0)] = True
 
 # Initial solution guess
-#U0 = -(1 - 2*np.abs(X+0.5)) * (1- 2*np.abs(Y+0.5)) * (1-np.abs(X)) * (1-np.abs(Y))  # ex 1 on L-shaped domain
-U0 = 100 * ((X - 1) * (X + 1) * (Y - 1) * (Y + 1)) * (0.0625 - X ** 2 - Y ** 2)  # ex 2 on square
+U0 = -(1 - 2*np.abs(X+0.5)) * (1- 2*np.abs(Y+0.5)) * (1-np.abs(X)) * (1-np.abs(Y))  # ex 1 on L-shaped domain
+#U0 = 100 * ((X - 1) * (X + 1) * (Y - 1) * (Y + 1)) * (0.0625 - X ** 2 - Y ** 2)  # ex 2 on square
 U0 = U0 * (Z == 1)
 U = U0.copy()
 U = U / np.linalg.norm(U.flatten(), ord=p)
 
 # calculate the iterative scheme
-uk, uk_list, plpls, cosims, lambda_vals, e0 = scheme(U, p, max_it)
+uk, uk_list, plpls, cosims, lambda_vals, e0 = scheme(U, p, max_it, r, h, Z, Dnp, cord, tol, Nt)
 
 # safe the study as dataframe
 results_frame = pandas.DataFrame()
-temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'x': X,
+temp_df = pandas.DataFrame([{'p': p, 'u0': U0, 'iterates': uk_list, 'r': r, 'xy': (X, Y),
                                  'plpl': plpls, 'COSIM': cosims, 'lambda_values': lambda_vals, 'error': e0}])
 results_frame = pandas.concat([results_frame, temp_df], ignore_index=True)
 
 # save results as pickle file
 os.makedirs('study_results/', exist_ok=True)
-results_frame.to_pickle('study_results/cosim_flow_ex2.pk')
+results_frame.to_pickle('study_results/cosim_flow_ex1.pk')
 

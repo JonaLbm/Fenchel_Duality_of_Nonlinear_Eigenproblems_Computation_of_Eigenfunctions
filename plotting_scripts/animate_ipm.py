@@ -3,13 +3,12 @@ import pandas
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from helpers import phi
 from mpl_toolkits.mplot3d import Axes3D
-from plotting_scripts.plot_ipm import diff_list_1
 
 mpl.use('macosx')
 
 name1 = '../study_results/ipm_ex1_p_2.pk'
-
 ########################################################################################################################################
 # Extract the data
 data_frame1 = pandas.read_pickle(name1)
@@ -31,7 +30,7 @@ cosim_list_1 = np.array(cosim_list_1)
 # compute more metrics
 RQ_list_1 = np.array([np.inner(plpl.ravel(), u.ravel()) for plpl, u in zip(plpl_list_1, U_list_1)])
 dRQ_list_1 = np.array([np.inner(plpl.ravel(), u.ravel())/(np.linalg.norm(plpl.ravel(), ord=q)**q) for plpl, u in zip(plpl_list_1, U_list_1)])
-diff_list_1 = np.array([plpl/np.linalg.norm(plpl.ravel(), ord=q) - u for plpl, u in zip(plpl_list_1, U_list_1)])
+diff_list_1 = np.array([plpl/np.linalg.norm(plpl.ravel(), ord=q) - phi(u,p) for plpl, u in zip(plpl_list_1, U_list_1)])
 ########################################################################################################################################
 
 t_max = len(U_list_1) - 1
@@ -46,7 +45,7 @@ ps1 = axs_top_1.plot_surface(X, Y, U_list_1[0], cmap="viridis")
 axs_top_1.set_title(r'iterates $u^{k}$')
 ps2 = axs_top_2.plot_surface(X, Y, diff_list_1[0], cmap="viridis")
 axs_top_2.set_title(r'error')
-axs_top_2.set_zlim(np.min(diff_list_1[0]), np.max(diff_list_1[0]))
+#axs_top_2.set_zlim(np.min(diff_list_1[0]), np.max(diff_list_1[0]))
 # plot the normal plots in lower figure
 axs = subfigs[1].subplots(1,3)
 axs[0].set_yscale('log')

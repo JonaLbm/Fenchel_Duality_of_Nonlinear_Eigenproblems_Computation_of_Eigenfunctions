@@ -112,7 +112,7 @@ U_list, V_list, alpha_list = scheme(U0, Z, tol, p, Nt, max_it)
 # collecting all the metrics
 J = lambda r: np.abs(r)**(p-1) * np.sign(r)
 J_u_list = [J(u) for u in U_list]  # dual mapping of the iterates
-plpl_list = [-disc_p_lap(p, r, h, Z, u, Dnp, cord) for u in U_list]  # p laplacian of the iterates
+plpl_list = [disc_p_lap(p, r, h, Z, u, Dnp, cord) for u in U_list]  # p laplacian of the iterates
 diff_list = [np.nan if np.isnan(ju + plpl).any() else ju/np.linalg.norm(ju.ravel(), ord=q) - plpl/np.linalg.norm(plpl.ravel(), ord=q) for ju, plpl in zip(J_u_list, plpl_list)]  # difference of normed plpl and normed dual mapping
 max_error_list = [np.max(np.abs(diff)) for diff in diff_list]  # maximal pointwise error of the difference
 l2_error_list = [np.nan if np.isnan(diff).any() else np.linalg.norm(diff.ravel()) for diff in diff_list]  # l2 error

@@ -2,8 +2,9 @@ import numpy as np
 import pandas
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-
+import os
 mpl.use('macosx')
+os.makedirs('plots/', exist_ok=True)
 
 name1 = '../study_results/ipm_ex1_p_1,77.pk'
 name2 = '../study_results/ipm_ex1_p_2.pk'
@@ -28,7 +29,7 @@ cosim_list_1 = np.array(cosim_list_1)
 
 # compute more metrics
 RQ_list_1 = np.array([np.inner(plpl.ravel(), u.ravel()) for plpl, u in zip(plpl_list_1, U_list_1)])
-dRQ_list_1 = np.array([np.inner(plpl.ravel(), u.ravel())/(np.linalg.norm(plpl.ravel(), ord=q)**q) for plpl, u in zip(plpl_list_1, U_list_1)])
+dRQ_list_1 = np.array([np.inner(plpl.ravel(), u.ravel())/(np.linalg.norm(plpl.ravel(), ord=q1)**q1) for plpl, u in zip(plpl_list_1, U_list_1)])
 ########################################################################################################################################
 
 data_frame2 = pandas.read_pickle(name2)

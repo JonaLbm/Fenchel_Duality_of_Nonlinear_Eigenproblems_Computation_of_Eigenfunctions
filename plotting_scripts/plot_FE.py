@@ -15,11 +15,11 @@ fenics_right = pd.read_pickle('../study_results/ipm_higher_ex2_FE_right.pk')
 fenics_right = fenics_right.fillna(value=np.nan)
 fenics_crossed = pd.read_pickle('../study_results/ipm_higher_ex2_FE_crossed.pk')
 fenics_crossed = fenics_crossed.fillna(value=np.nan)
-mean_value = pd.read_pickle('../study_results/inv_pm_p_3_higher_ex3_delteso_100_it_50.pk')
+mean_value = pd.read_pickle('../study_results/ipm_higher_ex2_MV.pk')
 mean_value = mean_value.fillna(value=np.nan)
 
 important_quantities = mean_value['etc'].to_numpy()
-tau, X, Y, Z, p, R, r, h, U0 = important_quantities[:9]  # padded with none
+X, Y, Z, p, R, r, h, U0 = important_quantities[:8]  # padded with none
 q = p/(p-1)
 # load the iterates u
 U_fl = fenics_left['U'].to_numpy()
@@ -33,7 +33,6 @@ cosim_fl = fenics_left['cosim'].to_numpy()[:-1] # padded with none
 cosim_fr = fenics_right['cosim'].to_numpy()[:-1]
 cosim_fc = fenics_crossed['cosim'].to_numpy()[:-1]
 cosim_mv = mean_value['cosim'].to_numpy()
-
 # load the metric l2 error
 error_mv = np.sqrt(mean_value['l2'].to_numpy())
 # need to calculate the diff first

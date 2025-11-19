@@ -253,7 +253,6 @@ def solve_flow_step_w_newton(U, F, Z, tol, p, max_iter, uold, weight, Dnp, cord,
     N, M = Z.shape
     F1D = F.ravel()
     uold1D = uold.ravel()
-    error = tol + 1
     PL = -disc_p_lap(p, r, h, Z, U, Dnp, cord)  # with - sign: positive laplacian
     PL1D = PL.ravel()
     U1D = U.ravel()
@@ -263,7 +262,7 @@ def solve_flow_step_w_newton(U, F, Z, tol, p, max_iter, uold, weight, Dnp, cord,
     for iteration in range(max_iter):  # tqdm(range(max_iter)):  #
         U1D = U.ravel()
         # Compute the Jacobian matrix
-        J_matrix = jac_disc_p_lap(p, r, h, Z, U, Dnp, cord) * weight  # with - sign: jacobian of negative laplacian
+        J_matrix = jac_disc_p_lap(p, r, h, Z, U, Dnp, cord).toarray() * weight  # with - sign: jacobian of negative laplacian
         J_matrix += diags(dphi((U1D - uold1D), p))
         # right hand side of newton LSE
         rhs = PL1D * weight - F1D + phi((U1D - uold1D), p)
@@ -287,16 +286,12 @@ def solve_flow_step_w_newton(U, F, Z, tol, p, max_iter, uold, weight, Dnp, cord,
         PL1D = PL.ravel()
         lhs = PL1D * weight + phi((U1D - uold1D), p)
         error = np.linalg.norm(lhs - F1D)
-        #print('error', error)
         if error < best_error:
             best_error = error
             best_U = np.copy(U)
         if error < tol:
             #print('newton method is converged')
             break
-    #if np.isnan(error):
-    #    return np.ones_like(uold), np.nan
-    #print('best newton error:', best_error)
     return best_U, best_error
 
 
@@ -414,7 +409,7 @@ def next_iterate_w_flow(uk, p, tau, rhs, weight, plpl, Z, tol, Nt, Dnp, cord, h,
             initial_guess = uk
             u_n, newton_error = solve_flow_step_w_newton(initial_guess, rhs, Z, tol, p, Nt, uk, weight, Dnp, cord, h, r)
             if np.isnan(newton_error):
-                # print('retrying with smaller step-size')
+                print('retrying with smaller step-size')
                 return None
     return u_n
 
