@@ -18,5 +18,7 @@ For an easy way to use the code you can create a virtual environment using conda
 
 See https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html for details.
 
+![FE_evolution_left]{https://github.com/JonaLbm/Duality_Perspective_on_Nonlinear_Eigenproblems_Computation_of_Eigenfunctions/blob/main/plotting_scripts/plots/FE_evolution_left.gif}
+
 
 
